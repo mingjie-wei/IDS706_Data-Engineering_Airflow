@@ -167,6 +167,8 @@ docker compose up -d --build
 
 - Optionally **Clear** tasks in UI (keeps data) and trigger again; staging will be overwritten and the mart rebuilt.
 
+![airflow_success_grid](docs/airflow_success_grid.png)
+
 ## Modeling
 
 #### Purpose
