@@ -16,7 +16,7 @@ An end-to-end **Airflow + Spark + Postgres** pipeline that ingests CSV data, bui
 
 ### Data Source
 
-- **Kaggle:** Store Sales – Time Series Forecasting
+- **Kaggle:** [Store Sales – Time Series Forecasting](https://www.kaggle.com/competitions/store-sales-time-series-forecasting)
 
     Dataset includes `train.csv`, `transactions.csv`, `oil.csv`, `stores.csv`, `holidays_events.csv`.
 
