@@ -98,7 +98,7 @@ Image: custom Airflow image with OpenJDK 17 (for Spark) and required Python pack
 
 #### Observed quality
 
-- Typical run: **R² ≈ 0.82, RMSE ≈ 414** after back-transform.
+- Typical run: **R² ≈ 0.82, RMSE ≈ 419** after back-transform.
 ![dbeaver](docs/dbeaver.png)
 
 ## DAG & Tasks
@@ -208,7 +208,7 @@ Validate the end-to-end pipeline and highlight signals that drive daily sales. T
 
 - R² ≈ 0.82 (log scale training; metrics reported on original scale)
 
-- RMSE ≈ 414
+- RMSE ≈ 419
 
 - Residuals mostly around zero with larger spread at high fitted values (expected for sales).
 ![residuals](artifacts/rf_20251103_210542_residuals.png)
