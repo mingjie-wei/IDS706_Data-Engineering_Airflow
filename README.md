@@ -99,9 +99,10 @@ Image: custom Airflow image with OpenJDK 17 (for Spark) and required Python pack
 #### Observed quality
 
 - Typical run: **R² ≈ 0.82, RMSE ≈ 414** after back-transform.
+![dbeaver](docs/dbeaver.png)
 
 ## DAG & Tasks
-![airflow_ui](docs/airflow_ui.png)
+![airflow_ui](docs/airflow_ui2.png)
 - **File:** dags/store_sales_pipeline.py
 
 - **Parallelism:** ingestion uses **five Spark tasks** that run concurrently under CeleryExecutor (one per CSV), then the transform, model, and cleanup run in order.
@@ -129,3 +130,133 @@ Image: custom Airflow image with OpenJDK 17 (for Spark) and required Python pack
     Drops all *_staging tables after a successful run.
 
     `start` / `end` `EmptyOperator`s mark boundaries.
+
+## Setup & Run
+
+#### Prerequisites
+
+- Docker Desktop with ≥ 16 GB RAM and some swap.
+
+#### Build & start
+
+```
+docker compose up -d --build
+```
+
+#### Airflow UI
+
+- http://localhost:8080 (user/pass: airflow / airflow)
+
+#### Add connection `postgres_main_db`
+
+- Conn Type: Postgres
+
+- Host: db, Port: 5432, Schema: airflow_db
+
+- Login: vscode, Password: vscode
+
+#### Trigger
+
+- In Airflow UI, run `store_sales_pipeline`.
+
+- Final table: `sales_features_mart` (Postgres).
+
+- Artifacts: `./artifacts` on the host.
+
+#### Re-run
+
+- Optionally **Clear** tasks in UI (keeps data) and trigger again; staging will be overwritten and the mart rebuilt.
+
+## Modeling
+
+#### Purpose
+Validate the end-to-end pipeline and highlight signals that drive daily sales. This is a baseline, not a production forecaster.
+
+#### Target
+`sales` per (`store_nbr`, `family`, `date`), modeled as `log1p(sales)`.
+
+#### Key predictors
+
+- Promotion: onpromotion
+
+- Store activity: store_transactions
+
+- Calendar: day_of_week, month, year
+
+- Macro: oil_price (filled)
+
+- Store profile: cluster, store_type
+
+- Product: family
+
+- Holiday context: is_national_holiday, is_regional_holiday, is_local_holiday, holiday_type
+
+#### Typical importance pattern
+
+- onpromotion — strongest positive effect
+
+- store_transactions — strong demand proxy
+
+- family dummies — category effects
+
+- calendar + holiday flags — seasonality / event effects
+
+- oil_price — small, sometimes directional
+![top30](artifacts/rf_20251103_210542_featimp_top30.png)
+
+#### Performance
+
+- R² ≈ 0.82 (log scale training; metrics reported on original scale)
+
+- RMSE ≈ 414
+
+- Residuals mostly around zero with larger spread at high fitted values (expected for sales).
+![residuals](artifacts/rf_20251103_210542_residuals.png)
+
+#### Takeaway
+
+The baseline confirms that the engineered features are informative and the pipeline is healthy. For production, a time-aware model with lag features or a global hierarchical forecaster is the next step.
+
+## Useful parameters
+
+| Area        | Parameter                            | Value / Note             |
+| ----------- | ------------------------------------ | ------------------------ |
+| JDBC Write  | `batchsize`                          | **5000**                 |
+| Spark       | `spark.sql.shuffle.partitions`       | **200**                  |
+| Repartition | `repartition(…, "store_nbr","date")` | **64** in transform step |
+
+## Tips for reusable items
+
+- Use explicit Spark schemas for CSVs to avoid type drift.
+
+- Repartition large facts and broadcast small dimensions to stabilize joins.
+
+- Cast dates before joins; drop unused columns early to shrink shuffles.
+
+- Ensure the image contains JDK and add the JDBC driver via spark.jars.packages.
+
+- Mount an artifacts folder for models and plots.
+
+- If JDBC writes fail, check column types in Postgres vs Spark DataFrame casts.
+
+## Project Layout
+
+```
+.devcontainer/Dockerfile   # Airflow + JDK 17 + pip install
+docker-compose.yml         # services + volumes
+requirements.txt           # pyspark, psycopg, sklearn, matplotlib...
+dags/store_sales_pipeline.py
+data/                      # CSV inputs
+artifacts/                 # model + charts (host)
+config/, logs/, plugins/   # Airflow folders
+```
+
+## Next Steps
+
+- Add rolling lags/aggregations per (store_nbr, family).
+
+- Use time-based validation (rolling origin).
+
+- Add SHAP or permutation importance.
+
+- Compare LightGBM/XGBoost and add scheduled retraining in the DAG.
