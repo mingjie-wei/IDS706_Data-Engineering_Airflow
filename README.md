@@ -14,6 +14,22 @@ An end-to-end **Airflow + Spark + Postgres** pipeline that ingests CSV data, bui
 
     - Artifacts on host: trained model (.joblib), feature-importance plot, residuals plot
 
+### Data Source
+
+- **Kaggle:** Store Sales – Time Series Forecasting
+
+    Dataset includes `train.csv`, `transactions.csv`, `oil.csv`, `stores.csv`, `holidays_events.csv`.
+
+- **Usage:** place CSVs under ./data/ (mounted to /opt/airflow/data in containers).
+    ```
+    data/
+    ├─ train.csv
+    ├─ transactions.csv
+    ├─ oil.csv
+    ├─ stores.csv
+    └─ holidays_events.csv
+    ```
+
 ### Architecture
 ```
 Docker Compose
