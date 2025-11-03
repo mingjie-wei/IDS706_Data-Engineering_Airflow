@@ -1,0 +1,13 @@
+# PySpark for transformation
+pyspark
+
+# Postgres driver
+psycopg2-binary
+
+# Pandas and scikit-learn for analysis
+pandas
+scikit-learn
+matplotlib
+
+# Airflow provider for Postgres
+apache-airflow-providers-postgres
